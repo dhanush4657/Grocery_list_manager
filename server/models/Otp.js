@@ -1,0 +1,15 @@
+const mongoose = require("mongoose");
+
+const OtpSchema = new mongoose.Schema(
+  {
+    phone: { type: String, required: true },
+    otp: { type: String, required: true },
+    expiresAt: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
+
+// TTL index to automatically delete expired OTPs
+OtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+module.exports = mongoose.model("Otp", OtpSchema);

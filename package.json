@@ -1,0 +1,10 @@
+{
+  "name": "grocery-list-manager",
+  "version": "1.0.0",
+  "description": "Collaborative Grocery List Manager",
+  "scripts": {
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  }
+}
