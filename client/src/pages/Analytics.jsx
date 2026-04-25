@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { BarChart3, TrendingUp, Users, ShoppingCart, ListChecks } from "lucide-react";
+import { Users, ShoppingCart, TrendingUp, ListChecks } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import Navbar from "../components/Navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const Analytics = () => {
   const [stats, setStats] = useState(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     try {
@@ -17,83 +17,92 @@ const Analytics = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setStats(res.data);
-    } catch(err) {}
+    } catch {}
   };
 
-  if (!stats) return <div className="flex bg-slate-soft dark:bg-slate-900 min-h-screen"></div>;
+  if (!stats) return <div className="flex bg-slate-50 min-h-screen" />;
 
   const fulfillmentNum = parseInt(stats.fulfillment) || 0;
 
+  const statCards = [
+    { label: "Active Groups",  value: stats.activeGroups,  icon: Users,       color: "text-slate-600" },
+    { label: "Total Lists",    value: stats.totalLists,    icon: ListChecks,  color: "text-slate-600" },
+    { label: "Items Pending",  value: stats.itemsPending,  icon: ShoppingCart,color: "text-slate-600" },
+    { label: "Fulfillment",    value: stats.fulfillment,   icon: TrendingUp,  color: "text-slate-600" },
+  ];
+
+  const weeks = [
+    { label: "Week 1", height: Math.max(10, fulfillmentNum - 15), opacity: "bg-slate-200" },
+    { label: "Week 2", height: Math.max(15, fulfillmentNum - 5),  opacity: "bg-slate-300" },
+    { label: "Week 3", height: Math.max(20, Math.min(fulfillmentNum + 8, 95)), opacity: "bg-slate-400" },
+    { label: "Current", height: fulfillmentNum, opacity: "bg-slate-800", highlight: true },
+  ];
+
   return (
-    <div className="flex bg-slate-soft dark:bg-slate-900 min-h-screen font-sans transition-colors duration-300">
+    <div className="flex bg-slate-50 min-h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Topbar title="Analytics" />
-        
-        <main className="flex-1 p-8 overflow-y-auto animate-fade-in max-w-6xl mx-auto w-full">
-          <header className="mb-8">
-            <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">
-              Analytics & Insights
-            </h1>
-            <p className="text-slate-500 font-medium">Track your grocery habits and group activity.</p>
-          </header>
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <Navbar />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                <div className="w-12 h-12 bg-brand-indigo/10 text-brand-indigo rounded-2xl flex items-center justify-center mb-4"><Users size={24}/></div>
-                <p className="text-3xl font-black text-slate-800 dark:text-white">{stats.activeGroups}</p>
-                <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">Active Groups</p>
-             </div>
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                <div className="w-12 h-12 bg-orange-500/10 text-orange-500 rounded-2xl flex items-center justify-center mb-4"><ListChecks size={24}/></div>
-                <p className="text-3xl font-black text-slate-800 dark:text-white">{stats.totalLists}</p>
-                <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">Total Lists</p>
-             </div>
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mb-4"><ShoppingCart size={24}/></div>
-                <p className="text-3xl font-black text-slate-800 dark:text-white">{stats.itemsPending}</p>
-                <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">Items Pending</p>
-             </div>
-             <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                <div className="w-12 h-12 bg-brand-emerald/10 text-brand-emerald rounded-2xl flex items-center justify-center mb-4"><TrendingUp size={24}/></div>
-                <p className="text-3xl font-black text-slate-800 dark:text-white">{stats.fulfillment}</p>
-                <p className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">Fulfillment</p>
-             </div>
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-slate-900">Analytics</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Track your grocery habits and group activity.</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
-             <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Fulfillment Overview (Last 4 Weeks)</h2>
-             
-             <div className="flex items-end justify-center gap-4 sm:gap-8 h-64 mt-10 max-w-3xl mx-auto border-b border-slate-200 dark:border-slate-700/50 pb-2">
-                <div className="flex-1 flex flex-col items-center gap-3 group">
-                   <div className="w-12 sm:w-20 bg-slate-100 dark:bg-slate-700/50 rounded-t-xl h-full flex items-end overflow-hidden relative">
-                      <div className="w-full bg-brand-indigo/40 rounded-t-xl transition-all duration-1000" style={{height: `${Math.max(10, fulfillmentNum - 15)}%`}}></div>
-                   </div>
-                   <p className="text-xs font-bold text-slate-400 uppercase">Week 1</p>
-                </div>
-                <div className="flex-1 flex flex-col items-center gap-3 group">
-                   <div className="w-12 sm:w-20 bg-slate-100 dark:bg-slate-700/50 rounded-t-xl h-full flex items-end overflow-hidden relative">
-                      <div className="w-full bg-brand-indigo/60 rounded-t-xl transition-all duration-1000" style={{height: `${Math.max(15, fulfillmentNum - 5)}%`}}></div>
-                   </div>
-                   <p className="text-xs font-bold text-slate-400 uppercase">Week 2</p>
-                </div>
-                <div className="flex-1 flex flex-col items-center gap-3 group">
-                   <div className="w-12 sm:w-20 bg-slate-100 dark:bg-slate-700/50 rounded-t-xl h-full flex items-end overflow-hidden relative">
-                      <div className="w-full bg-brand-indigo/80 rounded-t-xl transition-all duration-1000" style={{height: `${Math.max(20, fulfillmentNum + 8 > 100 ? 95 : fulfillmentNum + 8)}%`}}></div>
-                   </div>
-                   <p className="text-xs font-bold text-slate-400 uppercase">Week 3</p>
-                </div>
-                <div className="flex-1 flex flex-col items-center gap-3 group relative">
-                   <div className="w-12 sm:w-20 bg-slate-100 dark:bg-slate-700/50 rounded-t-xl h-full flex items-end overflow-hidden relative border border-brand-emerald/20">
-                      <div className="w-full bg-brand-emerald rounded-t-xl transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.3)]" style={{height: `${fulfillmentNum}%`}}></div>
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-white font-bold text-sm bg-black/70 backdrop-blur-md px-2 py-1 rounded-md">{fulfillmentNum}%</span>
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {statCards.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={stat.label} className="border-slate-200 shadow-none bg-white">
+                  <CardContent className="pt-5 pb-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                      <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center">
+                        <Icon size={14} className="text-slate-500" />
                       </div>
-                   </div>
-                   <p className="text-xs font-bold text-brand-emerald uppercase">Current</p>
-                </div>
-             </div>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
+
+          {/* Chart */}
+          <Card className="border-slate-200 shadow-none bg-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-slate-900">
+                Fulfillment Overview — Last 4 Weeks
+              </CardTitle>
+            </CardHeader>
+            <Separator />
+            <CardContent className="pt-6">
+              <div className="flex items-end gap-4 h-52 border-b border-slate-100 pb-0 max-w-lg">
+                {weeks.map((week) => (
+                  <div key={week.label} className="flex-1 flex flex-col items-center gap-2">
+                    <p className="text-xs text-slate-500 font-medium tabular-nums">
+                      {week.height}%
+                    </p>
+                    <div className="w-full bg-slate-100 rounded-t-md h-full flex items-end overflow-hidden">
+                      <div
+                        className={`w-full ${week.opacity} rounded-t-md transition-all duration-700`}
+                        style={{ height: `${week.height}%` }}
+                      />
+                    </div>
+                    <p className={`text-[10px] font-medium ${week.highlight ? "text-slate-900" : "text-slate-400"}`}>
+                      {week.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-4">
+                Current fulfillment rate: <span className="font-semibold text-slate-700">{stats.fulfillment}</span>
+              </p>
+            </CardContent>
+          </Card>
+
         </main>
       </div>
     </div>
