@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Users, FileText, CheckCircle, TrendingUp } from "lucide-react";
+import { Users, FileText, CheckCircle, TrendingUp, ArrowRight, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import Navbar from "../components/Navbar";
 import { socket } from "../socket";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -22,14 +26,12 @@ const Dashboard = () => {
     fetchStats();
     fetchUser();
     fetchActivities();
-    
+
     socket.on("newActivity", (activity) => {
-      setActivities(prev => [activity, ...prev].slice(0, 50));
+      setActivities((prev) => [activity, ...prev].slice(0, 50));
     });
 
-    return () => {
-      socket.off("newActivity");
-    };
+    return () => socket.off("newActivity");
   }, []);
 
   const fetchUser = async () => {
@@ -38,9 +40,7 @@ const Dashboard = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setUser(res.data);
-    } catch (err) {
-      console.error("Failed to fetch user");
-    }
+    } catch {}
   };
 
   const fetchActivities = async () => {
@@ -49,9 +49,7 @@ const Dashboard = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setActivities(res.data);
-    } catch (err) {
-      console.error("Failed to fetch activities");
-    }
+    } catch {}
   };
 
   const fetchStats = async () => {
@@ -60,173 +58,189 @@ const Dashboard = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setStats(res.data);
-    } catch (err) {
-      console.error("Failed to fetch stats");
-    }
+    } catch {}
   };
 
   const statCards = [
-    {
-      label: "Active Groups",
-      value: stats.activeGroups,
-      change: "+12%",
-      icon: <Users size={18} />,
-    },
-    {
-      label: "Total Lists",
-      value: stats.totalLists,
-      change: "+34%",
-      icon: <FileText size={18} />,
-    },
-    {
-      label: "Gross Input",
-      value: stats.totalLists, // placeholder
-      change: "+8%",
-      icon: <TrendingUp size={18} />,
-    },
-    {
-      label: "Fulfillment",
-      value: stats.fulfillment,
-      change: "+22%",
-      icon: <CheckCircle size={18} />,
-    },
+    { label: "Active Groups",  value: stats.activeGroups, change: "+12%", icon: Users },
+    { label: "Total Lists",    value: stats.totalLists,   change: "+34%", icon: FileText },
+    { label: "Gross Input",    value: stats.totalLists,   change: "+8%",  icon: TrendingUp },
+    { label: "Fulfillment",    value: stats.fulfillment,  change: "+22%", icon: CheckCircle },
   ];
 
+  const visibleActivities = showAllLogs ? activities : activities.slice(0, 5);
+
+  const dotColor = (type) => {
+    if (type === "success") return "bg-emerald-500";
+    if (type === "warning") return "bg-red-400";
+    return "bg-slate-400";
+  };
+
   return (
-    <div className="flex bg-slate-soft dark:bg-slate-900 min-h-screen font-sans transition-colors duration-300">
+    <div className="flex bg-slate-50 min-h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Topbar title="Overview" />
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <Navbar />
 
-        <main className="flex-1 p-8 overflow-y-auto animate-fade-in relative">
+        <main className="flex-1 p-6 overflow-y-auto">
+
           {/* Header */}
-          <header className="mb-8 flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-1">
-                Welcome back, <span className="text-brand-emerald">{user?.name ? user.name.split(' ')[0] : 'Test'}</span>
+              <h1 className="text-xl font-semibold text-slate-900">
+                Welcome back, {user?.name ? user.name.split(" ")[0] : "there"}
               </h1>
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-medium text-sm">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-emerald"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                System nominal. Here's your high-level overview.
-              </div>
+              <p className="text-sm text-slate-500 mt-0.5">Here's your high-level overview.</p>
             </div>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/analytics')}
-                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:border-brand-indigo/30 transition-all">
-                View Reports
-              </button>
-            </div>
-          </header>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {statCards.map((stat, i) => (
-              <div
-                key={stat.label}
-                className="bg-white dark:bg-slate-800 p-6 rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all hover:-translate-y-1 transform animate-slide-up relative overflow-hidden group"
-                style={{animationDelay: `${i * 100}ms`}}
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
-                </div>
-                
-                <div className="w-10 h-10 rounded-full bg-brand-emerald/10 dark:bg-brand-emerald/20 text-brand-emerald flex items-center justify-center mb-6">
-                   {stat.icon}
-                </div>
-                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                  {stat.label}
-                </p>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-black text-slate-800 dark:text-white tracking-tight">
-                    {stat.value}
-                  </span>
-                  <span className="bg-brand-emerald/10 text-brand-emerald text-xs font-bold px-2 py-0.5 rounded-md">
-                    {stat.change}
-                  </span>
-                </div>
-              </div>
-            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/analytics")}
+              className="border-slate-200 text-slate-600 text-xs h-8 gap-1.5"
+            >
+              View Reports <ArrowRight size={12} />
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {statCards.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={stat.label} className="border-slate-200 shadow-none bg-white">
+                  <CardContent className="pt-5 pb-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                      <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center">
+                        <Icon size={14} className="text-slate-500" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-slate-900">{stat.value}</span>
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] text-emerald-700 bg-emerald-50 border-0 px-1.5 py-0"
+                      >
+                        {stat.change}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Bottom Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
             {/* Recent Projects */}
-            <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-700 p-8 animate-slide-up" style={{animationDelay: '400ms'}}>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h2 className="text-lg font-bold text-slate-800 dark:text-white">Recent Projects</h2>
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Grocery Iterations</p>
-                </div>
-                <button className="bg-brand-emerald/10 text-brand-emerald px-4 py-2 rounded-lg font-bold text-sm hover:bg-brand-emerald/20 transition-all">
-                    View All
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                 {/* Project Item */}
-                 <div className="flex items-center gap-6 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-brand-emerald/30 transition-all cursor-pointer group">
-                    <div className="w-12 h-12 bg-brand-emerald/10 rounded-xl flex items-center justify-center text-brand-emerald">
-                        <FileText size={20} />
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-brand-emerald transition-colors">Weekly Groceries</h3>
-                            <span className="text-sm font-bold text-slate-500">0%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                            <div className="bg-brand-emerald h-full rounded-full" style={{ width: '0%' }}></div>
-                        </div>
-                    </div>
-                    <div className="text-slate-300 dark:text-slate-600 group-hover:text-slate-400 transition-colors pl-4">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-            {/* Activity Feed */}
-            <div className={`lg:col-span-1 bg-white dark:bg-slate-800 rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-700 p-8 animate-slide-up flex flex-col`} style={{animationDelay: '500ms', maxHeight: showAllLogs ? '600px' : 'auto'}}>
-              <div className="mb-8 flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-white">Activity Feed</h2>
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Audit Log</p>
-                </div>
-                {activities.length > 5 && (
-                  <button 
-                    onClick={() => setShowAllLogs(!showAllLogs)}
-                    className="text-xs font-bold text-brand-emerald bg-brand-emerald/10 px-3 py-1.5 rounded-lg hover:bg-brand-emerald/20 transition-colors"
+            <Card className="lg:col-span-2 border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Recent Projects</CardTitle>
+                    <CardDescription className="text-xs text-slate-400 mt-0.5">Grocery iterations</CardDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/lists")}
+                    className="text-xs text-slate-500 h-7 px-2"
                   >
-                    {showAllLogs ? 'Show Less' : 'View All'}
-                  </button>
-                )}
-              </div>
-              
-              {activities.length === 0 ? (
-                <div className="text-slate-500 text-sm font-medium">No recent activity.</div>
-              ) : (
-              <div className={`relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-slate-700 space-y-6 ${showAllLogs ? 'overflow-y-auto pr-4 flex-1' : ''}`}>
-                {(showAllLogs ? activities : activities.slice(0, 5)).map((log) => (
-                  <div key={log._id} className="relative flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center z-10 shrink-0">
-                          <div className={`w-2.5 h-2.5 rounded-full ${
-                            log.type === 'success' ? 'bg-brand-emerald' : 
-                            log.type === 'warning' ? 'bg-red-500' : 
-                            'bg-brand-indigo'
-                          }`}></div>
+                    View all
+                  </Button>
+                </div>
+              </CardHeader>
+              <Separator />
+              <CardContent className="pt-4 space-y-2">
+                {/* Static placeholder — replace with mapped list data */}
+                {[
+                  { name: "Weekly Groceries", progress: 0 },
+                  { name: "Monthly Essentials", progress: 40 },
+                  { name: "Party Supplies", progress: 75 },
+                ].map((project) => (
+                  <div
+                    key={project.name}
+                    onClick={() => navigate("/lists")}
+                    className="flex items-center gap-4 p-3 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all group"
+                  >
+                    <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center shrink-0">
+                      <FileText size={14} className="text-slate-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-sm font-medium text-slate-800 truncate">{project.name}</p>
+                        <span className="text-xs text-slate-400 ml-2 shrink-0">{project.progress}%</span>
                       </div>
-                      <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                            <span className="text-brand-emerald font-bold">{log.userId?.name ? log.userId.name : 'A user'}</span> {log.action.toLowerCase()}: {log.details}
-                          </p>
-                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                            {new Date(log.createdAt).toLocaleDateString()} {new Date(log.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </p>
+                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-slate-800 h-full rounded-full transition-all"
+                          style={{ width: `${project.progress}%` }}
+                        />
                       </div>
+                    </div>
+                    <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-400 shrink-0" />
                   </div>
                 ))}
-              </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+
+            {/* Activity Feed */}
+            <Card className="lg:col-span-1 border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Activity Feed</CardTitle>
+                    <CardDescription className="text-xs text-slate-400 mt-0.5">Audit log</CardDescription>
+                  </div>
+                  {activities.length > 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllLogs(!showAllLogs)}
+                      className="text-xs text-slate-500 h-7 px-2"
+                    >
+                      {showAllLogs ? "Less" : "View all"}
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <Separator />
+              <CardContent className="pt-4">
+                {activities.length === 0 ? (
+                  <p className="text-sm text-slate-400">No recent activity.</p>
+                ) : (
+                  <div
+                    className="space-y-4 overflow-y-auto"
+                    style={{ maxHeight: showAllLogs ? "360px" : "auto" }}
+                  >
+                    {visibleActivities.map((log) => (
+                      <div key={log._id} className="flex gap-3">
+                        <div className="mt-1.5 shrink-0">
+                          <div className={`w-2 h-2 rounded-full ${dotColor(log.type)}`} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-700 leading-relaxed">
+                            <span className="font-medium">
+                              {log.userId?.name || "A user"}
+                            </span>{" "}
+                            {log.action.toLowerCase()}: {log.details}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {new Date(log.createdAt).toLocaleDateString()}{" "}
+                            {new Date(log.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
           </div>
         </main>
       </div>

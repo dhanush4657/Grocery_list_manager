@@ -2,41 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-body.compact {
-  font-size: 0.9em;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222.2 47.4% 11.2%;
+    --radius: 0.5rem;
+  }
 }
 
-body.compact .p-8 {
-  padding: 1.25rem !important;
-}
-
-body.compact .p-6 {
-  padding: 1rem !important;
-}
-
-body.compact .py-3 {
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-}
-
-body.compact .py-2 {
-  padding-top: 0.25rem !important;
-  padding-bottom: 0.25rem !important;
-}
-
-body.compact .h-20 {
-  height: 3.5rem !important;
-}
-
-body.compact .text-4xl {
-  font-size: 1.75rem !important;
-  line-height: 2rem !important;
-}
-
-body.compact .mb-8 {
-  margin-bottom: 1rem !important;
-}
-
-body.compact .gap-6 {
-  gap: 0.75rem !important;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
 }

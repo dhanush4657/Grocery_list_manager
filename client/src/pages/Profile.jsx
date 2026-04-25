@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Moon, Sun, User, Mail, Phone, Calendar } from "lucide-react";
+import { Mail, Phone, Calendar, Edit2, X } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ name: "", phone: "" });
 
-  useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) {
-      setIsDarkMode(true);
-    } else {
-      setIsDarkMode(false);
-    }
-
-    fetchUser();
-  }, []);
+  useEffect(() => { fetchUser(); }, []);
 
   const fetchUser = async () => {
     try {
@@ -25,9 +24,7 @@ const Profile = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setUser(res.data);
-    } catch (err) {
-      console.error("Failed to fetch user");
-    }
+    } catch {}
   };
 
   const handleUpdateProfile = async (e) => {
@@ -38,164 +35,124 @@ const Profile = () => {
       });
       setUser(res.data);
       setIsEditing(false);
-    } catch(err) {
-      console.error("Failed to update profile");
-    }
+    } catch {}
   };
 
-  const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
-      setIsDarkMode(true);
-    }
-  };
+  const fields = [
+    { icon: Mail,     label: "Email Address", value: user?.email },
+    { icon: Phone,    label: "Mobile Number", value: user?.phone },
+    { icon: Calendar, label: "Joined On",      value: user ? new Date(user.createdAt).toLocaleDateString() : null },
+  ];
 
   return (
-    <div className="flex bg-slate-soft dark:bg-slate-900 min-h-screen font-sans transition-colors duration-300">
+    <div className="flex bg-slate-50 min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-6 md:p-12 animate-fade-in max-w-5xl mx-auto w-full">
-        <header className="mb-12">
-          <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">
-            Account Profile
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            Manage your personal settings and app preferences.
-          </p>
-        </header>
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <Navbar />
+        <main className="flex-1 p-6 overflow-y-auto">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Profile Info */}
-          <div className="lg:col-span-2">
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white dark:border-slate-700 shadow-glass animate-slide-up">
-              <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-8 border-b border-slate-100 dark:border-slate-700/50 pb-8">
-                <div className="flex items-center gap-6">
-                  <div className="relative group cursor-pointer">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand-emerald to-brand-indigo flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-brand-indigo/30 overflow-hidden">
-                      {user?.photoUrl ? (
-                        <img src={user.photoUrl} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        user?.name ? user.name.charAt(0).toUpperCase() : "U"
-                      )}
-                    </div>
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-white text-[10px] font-bold uppercase tracking-wider">Change</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{user?.name || "User"}</h2>
-                    <p className="text-brand-indigo dark:text-brand-emerald font-medium">Pro Member</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => {
-                    setEditData({ name: user?.name || "", phone: user?.phone || "" });
-                    setIsEditing(true);
-                  }}
-                  className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border border-slate-200 dark:border-slate-600"
-                >
-                  Edit Profile
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700/50 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300">
-                    <Mail size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Email Address</p>
-                    <p className="text-slate-800 dark:text-white font-medium">{user?.email || "Not Provided"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700/50 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300">
-                    <Phone size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mobile Number</p>
-                    <p className="text-slate-800 dark:text-white font-medium">{user?.phone || "Not Provided"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700/50 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300">
-                    <Calendar size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Joined On</p>
-                    <p className="text-slate-800 dark:text-white font-medium">{user ? new Date(user.createdAt).toLocaleDateString() : "..."}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-slate-900">Profile</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Manage your personal information.</p>
           </div>
 
-          {/* Preferences Settings */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-8 rounded-[2rem] border border-white dark:border-slate-700 shadow-glass animate-slide-up" style={{animationDelay: '100ms'}}>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                App Preferences
-              </h3>
-              
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700/50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-indigo/10 dark:bg-brand-emerald/10 flex items-center justify-center text-brand-indigo dark:text-brand-emerald">
-                    {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
+          <div className="max-w-2xl space-y-4">
+
+            {/* Avatar + Name */}
+            <Card className="border-slate-200 shadow-none bg-white">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-slate-100 text-slate-700 text-base font-semibold">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{user?.name || "User"}</p>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 mt-1">Pro Member</Badge>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white">Dark Mode</p>
-                    <p className="text-xs font-medium text-slate-400">Toggle theme</p>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setEditData({ name: user?.name || "", phone: user?.phone || "" }); setIsEditing(true); }}
+                    className="h-7 px-3 text-xs border-slate-200 gap-1.5"
+                  >
+                    <Edit2 size={11} /> Edit
+                  </Button>
                 </div>
-                
-                <button 
-                  onClick={toggleDarkMode}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-indigo focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${isDarkMode ? 'bg-brand-emerald' : 'bg-slate-300'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            {/* Info Fields */}
+            <Card className="border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-900">Account Details</CardTitle>
+                <CardDescription className="text-xs text-slate-400">Your personal information</CardDescription>
+              </CardHeader>
+              <Separator />
+              <CardContent className="pt-4 space-y-1">
+                {fields.map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-3 py-2.5">
+                    <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0">
+                      <Icon size={13} className="text-slate-500" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-between">
+                      <p className="text-xs text-slate-400">{label}</p>
+                      <p className="text-xs font-medium text-slate-900">{value || "Not provided"}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
           </div>
-        </div>
-          {/* Edit Profile Modal */}
+
+          {/* Edit Modal */}
           {isEditing && (
-             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-               <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl w-full max-w-md animate-fade-in border border-slate-200 dark:border-slate-700">
-                  <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Edit Profile</h2>
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
-                     <div>
-                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Name</label>
-                       <input 
-                         value={editData.name}
-                         onChange={e => setEditData({...editData, name: e.target.value})}
-                         className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-brand-indigo/30 text-sm font-medium text-slate-700 dark:text-white"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone</label>
-                       <input 
-                         value={editData.phone}
-                         onChange={e => setEditData({...editData, phone: e.target.value})}
-                         className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-brand-indigo/30 text-sm font-medium text-slate-700 dark:text-white"
-                       />
-                     </div>
-                     <div className="flex items-center gap-3 pt-4">
-                        <button type="submit" className="flex-1 bg-brand-emerald text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-600 transition-colors">Save Changes</button>
-                        <button type="button" onClick={() => setIsEditing(false)} className="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                     </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <Card className="w-full max-w-sm border-slate-200 shadow-lg">
+                <CardContent className="pt-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-semibold text-slate-900">Edit Profile</p>
+                    <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600">
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <form onSubmit={handleUpdateProfile} className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-slate-600">Name</Label>
+                      <Input
+                        value={editData.name}
+                        onChange={e => setEditData({ ...editData, name: e.target.value })}
+                        className="h-8 text-sm border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-slate-600">Phone</Label>
+                      <Input
+                        value={editData.phone}
+                        onChange={e => setEditData({ ...editData, phone: e.target.value })}
+                        className="h-8 text-sm border-slate-200"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button type="submit" size="sm" className="flex-1 h-8 bg-slate-900 hover:bg-slate-700 text-white text-xs">
+                        Save
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(false)} className="flex-1 h-8 text-xs border-slate-200">
+                        Cancel
+                      </Button>
+                    </div>
                   </form>
-               </div>
-             </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
-      </main>
+
+        </main>
+      </div>
     </div>
   );
 };

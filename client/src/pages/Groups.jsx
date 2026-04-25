@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Users, Copy, Check, Plus, Key, ArrowRight, Home, ShoppingCart, Star, Heart, Building, Settings } from "lucide-react";
+import { Users, Copy, Check, Plus, Key, Home, ShoppingCart, Star, Heart, Building, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import Navbar from "../components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+const ICONS = [
+  { name: "Home",     component: Home },
+  { name: "People",   component: Users },
+  { name: "Cart",     component: ShoppingCart },
+  { name: "Star",     component: Star },
+  { name: "Heart",    component: Heart },
+  { name: "Building", component: Building },
+];
 
 const Groups = () => {
   const navigate = useNavigate();
@@ -13,22 +30,11 @@ const Groups = () => {
   const [selectedIcon, setSelectedIcon] = useState("Home");
   const [joinGroupId, setJoinGroupId] = useState("");
   const [copiedId, setCopiedId] = useState("");
-  const [activeTab, setActiveTab] = useState("create"); // 'create' or 'join'
+  const [activeTab, setActiveTab] = useState("create");
   const [sortBy, setSortBy] = useState("date");
   const [selectedGroupMembers, setSelectedGroupMembers] = useState(null);
 
-  const ICONS = [
-    { name: "Home", component: <Home size={20} /> },
-    { name: "People", component: <Users size={20} /> },
-    { name: "Cart", component: <ShoppingCart size={20} /> },
-    { name: "Star", component: <Star size={20} /> },
-    { name: "Heart", component: <Heart size={20} /> },
-    { name: "Building", component: <Building size={20} /> },
-  ];
-
-  useEffect(() => {
-    fetchGroups();
-  }, []);
+  useEffect(() => { fetchGroups(); }, []);
 
   const fetchGroups = async () => {
     try {
@@ -36,53 +42,41 @@ const Groups = () => {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       setGroups(res.data);
-    } catch (err) {
-      console.error("Failed to fetch groups");
-    }
+    } catch {}
   };
 
   const handleDeleteGroup = async (e, groupId) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this group?")) return;
+    if (!window.confirm("Delete this group?")) return;
     try {
       await axios.delete(`http://localhost:5000/api/groups/${groupId}`, {
         headers: { "x-auth-token": localStorage.getItem("token") },
       });
       fetchGroups();
-    } catch(err) {
-      alert("Failed to delete group. You might not be the admin.");
-    }
+    } catch { alert("Failed to delete group."); }
   };
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:5000/api/groups",
+      await axios.post("http://localhost:5000/api/groups",
         { groupName: newGroupName, description, icon: selectedIcon },
-        { headers: { "x-auth-token": localStorage.getItem("token") } },
+        { headers: { "x-auth-token": localStorage.getItem("token") } }
       );
-      setNewGroupName("");
-      setDescription("");
+      setNewGroupName(""); setDescription("");
       fetchGroups();
-    } catch (err) {
-      console.error("Failed to create group");
-    }
+    } catch {}
   };
 
   const handleJoinGroup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:5000/api/groups/join",
+      await axios.post("http://localhost:5000/api/groups/join",
         { groupId: joinGroupId },
-        { headers: { "x-auth-token": localStorage.getItem("token") } },
+        { headers: { "x-auth-token": localStorage.getItem("token") } }
       );
-      setJoinGroupId("");
-      fetchGroups();
-    } catch (err) {
-      console.error("Failed to join group");
-    }
+      setJoinGroupId(""); fetchGroups();
+    } catch {}
   };
 
   const copyToClipboard = (id) => {
@@ -93,227 +87,268 @@ const Groups = () => {
 
   const renderIcon = (name) => {
     const found = ICONS.find(i => i.name === name);
-    return found ? found.component : <Home size={20} />;
+    const Icon = found ? found.component : Home;
+    return <Icon size={16} />;
   };
 
   const getSortedGroups = () => {
-    let sorted = [...groups];
-    if (sortBy === "name") {
-      sorted.sort((a, b) => a.groupName.localeCompare(b.groupName));
-    } else { // date
-      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
+    const sorted = [...groups];
+    if (sortBy === "name") sorted.sort((a, b) => a.groupName.localeCompare(b.groupName));
+    else sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return sorted;
   };
 
   return (
-    <div className="flex bg-slate-soft dark:bg-slate-900 min-h-screen font-sans transition-colors duration-300">
+    <div className="flex bg-slate-50 min-h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <Topbar title="Groups" />
-        <main className="flex-1 p-8 overflow-y-auto animate-fade-in relative">
-          
-          <header className="mb-8">
-            <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-1">
-              Groups
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
-              Manage your family and shopping groups
-            </p>
-          </header>
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <Navbar />
+        <main className="flex-1 p-6 overflow-y-auto">
 
-          <div className="max-w-4xl space-y-10">
-            {/* Create / Join Section */}
-            <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-700 p-8 animate-slide-up">
-              
-              <div className="flex items-center gap-6 border-b border-slate-100 dark:border-slate-700 pb-6 mb-6">
-                 <button 
-                   onClick={() => setActiveTab('create')}
-                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'create' ? 'bg-brand-emerald/10 text-brand-emerald shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                 >
-                    <Plus size={16} /> Create Group
-                 </button>
-                 <button 
-                   onClick={() => setActiveTab('join')}
-                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'join' ? 'bg-brand-indigo/10 text-brand-indigo shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                 >
-                    <Key size={16} /> Join with Code
-                 </button>
-              </div>
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold text-slate-900">Groups</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Manage your family and shopping groups</p>
+          </div>
 
-              {activeTab === 'create' ? (
-                <form onSubmit={handleCreateGroup} className="space-y-6 animate-fade-in">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Group Icon</label>
-                    <div className="flex items-center gap-4">
-                      {ICONS.map((icon) => (
-                        <button
-                          key={icon.name}
-                          type="button"
-                          onClick={() => setSelectedIcon(icon.name)}
-                          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                            selectedIcon === icon.name
-                              ? "bg-brand-emerald/10 text-brand-emerald border-2 border-brand-emerald shadow-sm"
-                              : "bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-2 border-transparent hover:bg-slate-100 dark:hover:bg-slate-600"
-                          }`}
-                        >
-                          {icon.component}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          <div className="max-w-4xl space-y-6">
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-2">Group Name <span className="text-red-500">*</span></label>
-                        <input
-                        className="w-full p-3.5 rounded-xl border border-brand-emerald bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-brand-emerald/30 text-sm font-medium text-slate-700 dark:text-white transition-all placeholder:text-slate-400"
-                        placeholder="e.g., The Jani Family"
-                        value={newGroupName}
-                        onChange={(e) => setNewGroupName(e.target.value)}
-                        required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-2">Description (Optional)</label>
-                        <input
-                        className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:border-brand-emerald focus:ring-2 focus:ring-brand-emerald/30 text-sm font-medium text-slate-700 dark:text-white transition-all placeholder:text-slate-400"
-                        placeholder="e.g., Weekly grocery group"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        />
-                    </div>
-                  </div>
-
-                  <button className="bg-brand-emerald text-white px-6 py-3 rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-brand-emerald/20 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center">
-                    Create Group
+            {/* Create / Join Card */}
+            <Card className="border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-0">
+                <div className="flex gap-1 border-b border-slate-100 pb-4">
+                  <button
+                    onClick={() => setActiveTab("create")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                      activeTab === "create"
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <Plus size={13} /> Create Group
                   </button>
-                </form>
-              ) : (
-                <form onSubmit={handleJoinGroup} className="space-y-6 animate-fade-in">
-                   <div>
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-2">Group Code <span className="text-red-500">*</span></label>
-                        <input
-                        className="w-full md:w-1/2 p-3.5 rounded-xl border border-brand-indigo bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-brand-indigo/30 text-sm font-bold tracking-widest text-slate-700 dark:text-white transition-all placeholder:text-slate-400 placeholder:font-medium placeholder:tracking-normal"
+                  <button
+                    onClick={() => setActiveTab("join")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                      activeTab === "join"
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <Key size={13} /> Join with Code
+                  </button>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-5">
+                {activeTab === "create" ? (
+                  <form onSubmit={handleCreateGroup} className="space-y-4">
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-2 block">Group Icon</Label>
+                      <div className="flex gap-2">
+                        {ICONS.map((icon) => {
+                          const Icon = icon.component;
+                          return (
+                            <button
+                              key={icon.name}
+                              type="button"
+                              onClick={() => setSelectedIcon(icon.name)}
+                              className={`w-9 h-9 rounded-md flex items-center justify-center transition-all border ${
+                                selectedIcon === icon.name
+                                  ? "bg-slate-900 text-white border-slate-900"
+                                  : "bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300"
+                              }`}
+                            >
+                              <Icon size={15} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-slate-600">Group Name <span className="text-red-400">*</span></Label>
+                        <Input
+                          placeholder="e.g. The Jani Family"
+                          value={newGroupName}
+                          onChange={(e) => setNewGroupName(e.target.value)}
+                          className="h-9 text-sm border-slate-200"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-slate-600">Description (Optional)</Label>
+                        <Input
+                          placeholder="e.g. Weekly grocery group"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          className="h-9 text-sm border-slate-200"
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" size="sm" className="bg-slate-900 hover:bg-slate-700 text-white h-8 text-xs">
+                      Create Group
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleJoinGroup} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-slate-600">Group Code <span className="text-red-400">*</span></Label>
+                      <Input
                         placeholder="Paste Group ID here"
                         value={joinGroupId}
                         onChange={(e) => setJoinGroupId(e.target.value)}
+                        className="h-9 text-sm border-slate-200 font-mono tracking-wider max-w-sm"
                         required
-                        />
+                      />
                     </div>
-                    <button className="bg-brand-indigo text-white px-6 py-3 rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-brand-indigo/20 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center">
-                    Join Group
-                  </button>
-                </form>
-              )}
-            </div>
+                    <Button type="submit" size="sm" className="bg-slate-900 hover:bg-slate-700 text-white h-8 text-xs">
+                      Join Group
+                    </Button>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
 
-            {/* My Groups List */}
-            <div className="animate-slide-up" style={{animationDelay: '100ms'}}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white">
-                   <Users size={18} className="text-brand-emerald" />
-                   My Groups ({groups.length})
-                </h2>
-                <div className="relative">
-                   <select 
-                     className="appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl pl-4 pr-10 py-2 outline-none focus:ring-2 focus:ring-brand-emerald/20"
-                     value={sortBy}
-                     onChange={(e) => setSortBy(e.target.value)}
-                   >
-                     <option value="date">Sort by Date</option>
-                     <option value="name">Sort by Name</option>
-                   </select>
-                   <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </div>
+            {/* Groups List */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                  <Users size={14} className="text-slate-400" />
+                  My Groups
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0">{groups.length}</Badge>
+                </p>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-7 w-32 text-xs border-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date" className="text-xs">By Date</SelectItem>
+                    <SelectItem value="name" className="text-xs">By Name</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {groups.length === 0 ? (
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">No groups found. Create or join one.</p>
-                ) : (
-                  getSortedGroups().map((group) => (
-                    <div
+
+              {groups.length === 0 ? (
+                <Card className="border-slate-200 shadow-none border-dashed">
+                  <CardContent className="py-10 text-center">
+                    <p className="text-sm text-slate-400">No groups yet. Create or join one above.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {getSortedGroups().map((group) => (
+                    <Card
                       key={group._id}
-                      onClick={() => navigate('/lists', { state: { groupId: group._id } })}
-                      className="cursor-pointer bg-white dark:bg-slate-800 p-6 rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group hover:border-brand-emerald/30 transition-all hover:shadow-md"
+                      onClick={() => navigate("/lists", { state: { groupId: group._id } })}
+                      className="border-slate-200 shadow-none bg-white cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-brand-emerald/10 rounded-2xl flex items-center justify-center text-brand-emerald shadow-inner">
-                                {renderIcon(group.icon)}
+                      <CardContent className="pt-5 pb-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center text-slate-600">
+                              {renderIcon(group.icon)}
                             </div>
                             <div>
-                                <h3 className="font-bold text-slate-800 dark:text-white text-lg tracking-tight flex items-center gap-2">
-                                  {group.groupName}
-                                </h3>
-                                {group.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{group.description}</p>}
+                              <p className="text-sm font-semibold text-slate-900">{group.groupName}</p>
+                              {group.description && (
+                                <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{group.description}</p>
+                              )}
                             </div>
-                         </div>
-                         <span className="bg-brand-emerald/10 text-brand-emerald text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md">
-                             Admin
-                         </span>
-                      </div>
+                          </div>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Admin</Badge>
+                        </div>
 
-                      <div className="flex items-center gap-2 mb-6">
-                          <code className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-widest bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-600">
-                            {group._id.slice(-10).toUpperCase()}
-                          </code>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); copyToClipboard(group._id); }}
-                            className={`p-1.5 rounded-lg transition-colors ${copiedId === group._id ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-50 dark:bg-slate-700 text-brand-emerald hover:bg-brand-emerald/10'}`}
-                            title="Copy full ID"
-                          >
-                            {copiedId === group._id ? <Check size={14} /> : <Copy size={14} />}
-                          </button>
-                      </div>
+                        <Separator className="mb-3" />
 
-                      <div className="flex items-center gap-3">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedGroupMembers(group); }}
-                            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200/50 dark:border-slate-600">
-                             <Users size={14} /> View Members
-                          </button>
-                          <button 
-                            onClick={(e) => handleDeleteGroup(e, group._id)}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                          </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <code className="text-[10px] text-slate-400 bg-slate-50 border border-slate-200 px-2 py-1 rounded font-mono">
+                              {group._id.slice(-10).toUpperCase()}
+                            </code>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(group._id); }}
+                              className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                              {copiedId === group._id ? <Check size={12} /> : <Copy size={12} />}
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); setSelectedGroupMembers(group); }}
+                              className="h-7 px-2 text-xs text-slate-500"
+                            >
+                              <Users size={12} className="mr-1" /> Members
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => handleDeleteGroup(e, group._id)}
+                              className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 size={12} />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Members Modal */}
           {selectedGroupMembers && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-               <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl w-full max-w-md animate-fade-in border border-slate-200 dark:border-slate-700">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Members in {selectedGroupMembers.groupName}</h2>
-                    <button onClick={() => setSelectedGroupMembers(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <Card className="w-full max-w-sm border-slate-200 shadow-lg">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm font-semibold text-slate-900">
+                        {selectedGroupMembers.groupName}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-0.5">Group members</CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedGroupMembers(null)}
+                      className="h-7 w-7 p-0 text-slate-400"
+                    >
+                      <X size={14} />
+                    </Button>
                   </div>
-                  <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-                    {selectedGroupMembers.members.map((member, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-10 h-10 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center font-bold">
+                </CardHeader>
+                <Separator />
+                <CardContent className="pt-4 space-y-2 max-h-60 overflow-y-auto">
+                  {selectedGroupMembers.members.map((member, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-slate-100 text-slate-600 text-xs font-semibold">
                           {member.name ? member.name.charAt(0).toUpperCase() : "U"}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-800 dark:text-white">{member.name || "Unknown User"}</p>
-                          <p className="text-xs text-slate-500">{member.email}</p>
-                        </div>
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-xs font-medium text-slate-900">{member.name || "Unknown"}</p>
+                        <p className="text-[10px] text-slate-400">{member.email}</p>
                       </div>
-                    ))}
-                  </div>
-                  <button onClick={() => setSelectedGroupMembers(null)} className="w-full mt-6 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                    </div>
+                  ))}
+                </CardContent>
+                <Separator />
+                <div className="p-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs border-slate-200"
+                    onClick={() => setSelectedGroupMembers(null)}
+                  >
                     Close
-                  </button>
-               </div>
+                  </Button>
+                </div>
+              </Card>
             </div>
           )}
 
