@@ -96,7 +96,14 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      await axios.post(`${API}/login`, formData);
+      const res = await axios.post(`${API}/login`, formData);
+      // Demo bypass: backend returns token directly, no OTP step needed
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userId", res.data.user.id);
+        navigate("/dashboard");
+        return;
+      }
       startCountdown();
       setStep("otp");
     } catch (err) {
