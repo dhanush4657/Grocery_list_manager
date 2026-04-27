@@ -106,6 +106,12 @@ exports.verifyEmailOtp = async (req, res) => {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// DEMO credentials — bypass OTP entirely and get a JWT directly
+// ────────────────────────────────────────────────────────────────────────────
+const DEMO_EMAIL    = "alice@example.com";
+const DEMO_PASSWORD = "password123";
+
+// ────────────────────────────────────────────────────────────────────────────
 // LOGIN — sends OTP to email instead of returning token directly
 // POST /api/auth/login
 // Body: { email, password }
@@ -113,6 +119,29 @@ exports.verifyEmailOtp = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
+    // ── Demo bypass ──────────────────────────────────────────────────────────
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      // Find or auto-create the demo user so it always works
+      let demo = await User.findOne({ email: DEMO_EMAIL });
+      if (!demo) {
+        const salt = await bcrypt.genSalt(10);
+        demo = new User({
+          name: "Alice (Demo)",
+          email: DEMO_EMAIL,
+          password: await bcrypt.hash(DEMO_PASSWORD, salt),
+          isVerified: true,
+        });
+        await demo.save();
+      }
+      const token = await signToken(demo.id);
+      return res.json({
+        token,
+        user: { id: demo.id, name: demo.name, email: demo.email },
+        demo: true,   // flag so the frontend can show a "Demo mode" badge if desired
+      });
+    }
+    // ── Normal login ─────────────────────────────────────────────────────────
+
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: "Invalid Credentials" });
 
